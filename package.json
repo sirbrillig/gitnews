@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "See GitHub notifications",
   "main": "index.js",
+  "bin": {
+    "gitnews": "./index.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,5 +15,17 @@
     "dotenv": "^4.0.0",
     "lodash.get": "^4.4.2",
     "node-fetch": "^1.6.3"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sirbrillig/gitnews.git"
+  },
+  "keywords": [
+    "github"
+  ],
+  "bugs": {
+    "url": "https://github.com/sirbrillig/gitnews/issues"
+  },
+  "homepage": "https://github.com/sirbrillig/gitnews#readme"
 }

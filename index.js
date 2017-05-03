@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const fetch = require( 'node-fetch' )
 const get = require( 'lodash.get' )
 require( 'dotenv' ).config()
