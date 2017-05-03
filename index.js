@@ -3,17 +3,19 @@ const fetch = require( 'node-fetch' )
 const get = require( 'lodash.get' )
 require( 'dotenv' ).config()
 const chalk = require( 'chalk' )
+const date = require( 'date-fns' )
 
 function getDate( notification ) {
-	return notification.updated_at
+	const now = Date.now()
+	return date.distanceInWords( now, date.parse( get( notification, 'updated_at', '' ) ), { addSuffix: true } )
 }
 
 function getRepo( notification ) {
-	return get( notification, 'repository.full_name' )
+	return get( notification, 'repository.full_name', '' )
 }
 
 function getTitle( notification ) {
-	return get( notification, 'subject.title' )
+	return get( notification, 'subject.title', '' )
 }
 
 function getFormattedNotification( note ) {
