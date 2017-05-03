@@ -60,16 +60,25 @@ function printNotifications( notifications ) {
 	getFormattedNotifications( notifications ).map( output );
 }
 
+function getAPIToken() {
+	return process.env.GITNEWS_TOKEN;
+}
+
 function getFetchInit() {
 	return {
 		method: 'GET',
 		headers: {
-			Authorization: 'token ' + process.env.GITNEWS_TOKEN
-		}
+			Authorization: 'token ' + getAPIToken(),
+		},
 	};
 }
 
-function fetcNotifications() {
+function fetchNotifications() {
+	if ( ! getAPIToken() ) {
+		return new Promise( ( resolve, reject ) => {
+			reject( 'GITNEWS_TOKEN was not set' );
+		} );
+	}
 	debug( 'fetching notifications...' );
 	return fetch( 'https://api.github.com/notifications', getFetchInit() );
 }
@@ -86,7 +95,7 @@ function fetchNotificationSubjectUrl( notification ) {
 }
 
 function fetchNotificationSubjectUrls( notifications ) {
-	debug( 'fetching notification urls...' );
+	debug( `fetching notification urls for ${ notifications.length } notifications...` );
 	return Promise.all( notifications.map( fetchNotificationSubjectUrl ) );
 }
 
@@ -96,7 +105,7 @@ function printError( err ) {
 
 // -------------
 
-fetcNotifications()
+fetchNotifications()
 	.then( convertToJson )
 	.then( fetchNotificationSubjectUrls )
 	.then( printNotifications )
