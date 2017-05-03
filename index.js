@@ -2,9 +2,22 @@
 const fetch = require( 'node-fetch' )
 const get = require( 'lodash.get' )
 require( 'dotenv' ).config()
+const chalk = require( 'chalk' )
 
-function getFormattedNotification( notification ) {
-	return notification.updated_at + ': ' + '(' + get( notification, 'repository.full_name' ) + ') ' + get( notification, 'subject.title' )
+function getDate( notification ) {
+	return notification.updated_at
+}
+
+function getRepo( notification ) {
+	return get( notification, 'repository.full_name' )
+}
+
+function getTitle( notification ) {
+	return get( notification, 'subject.title' )
+}
+
+function getFormattedNotification( note ) {
+	return chalk.bold.yellow( getDate( note ) + ': ' ) + chalk.green( '(' + getRepo( note ) + ') ' ) + getTitle( note )
 }
 
 function output( line ) {
@@ -19,6 +32,4 @@ const init = {
 }
 fetch( 'https://api.github.com/notifications', init )
 .then( res => res.json() )
-.then( function( notifications ) {
-	notifications.map( getFormattedNotification ).map( output )
-} )
+.then( notifications => notifications.map( getFormattedNotification ).map( output ) )
