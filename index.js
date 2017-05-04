@@ -7,7 +7,6 @@ const date = require( 'date-fns' );
 const meow = require( 'meow' );
 const inquirer = require( 'inquirer' );
 const Conf = require( 'conf' );
-const logUpdate = require( 'log-update' );
 const columnify = require( 'columnify' );
 
 const config = new Conf();
@@ -15,7 +14,7 @@ const config = new Conf();
 let logMessages = false;
 
 function log( message ) {
-	logMessages && logUpdate( message );
+	logMessages && output( message );
 }
 
 function getUrl( notification ) {
@@ -74,10 +73,10 @@ function getFormattedNotifications( notifications ) {
 }
 
 function printNotifications( notifications ) {
-	log( `😁  printing ${ notifications.length } notifications...` );
-	logUpdate.done();
+	log( `printing ${ notifications.length } notifications...` );
 	if ( notifications.length < 1 ) {
-		log( '👍  No notifications!' );
+		output( '👍  No notifications!' );
+		return;
 	}
 	outputColumns( getFormattedNotifications( notifications ) );
 }
