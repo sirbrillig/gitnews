@@ -76,6 +76,9 @@ function getFetchInit() {
 function fetchNotifications() {
 	if ( ! getAPIToken() ) {
 		return new Promise( ( resolve, reject ) => {
+			printError( chalk.yellow( 'You do not have a GitHub token configured.' ) );
+			printError( chalk.yellow( 'Please Generate one at https://github.com/settings/tokens' ) );
+			printError( chalk.green( 'Once you have a token, run `gitnews --save-token`' ) );
 			reject( 'GITNEWS_TOKEN was not set' );
 		} );
 	}
