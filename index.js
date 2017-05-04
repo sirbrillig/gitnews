@@ -4,9 +4,13 @@ const get = require( 'lodash.get' );
 require( 'dotenv' ).config();
 const chalk = require( 'chalk' );
 const date = require( 'date-fns' );
+const meow = require( 'meow' );
+const inquirer = require( 'inquirer' );
+const Conf = require( 'conf' );
 const debugFactory = require( 'debug' );
 
 const debug = debugFactory( 'gitnews' );
+const config = new Conf();
 
 function getUrl( notification ) {
 	return get( notification, 'htmlUrl', '' );
@@ -60,21 +64,17 @@ function printNotifications( notifications ) {
 	getFormattedNotifications( notifications ).map( output );
 }
 
-function getAPIToken() {
-	return process.env.GITNEWS_TOKEN;
-}
-
 function getFetchInit() {
 	return {
 		method: 'GET',
 		headers: {
-			Authorization: 'token ' + getAPIToken(),
+			Authorization: 'token ' + getToken(),
 		},
 	};
 }
 
 function fetchNotifications() {
-	if ( ! getAPIToken() ) {
+	if ( ! getToken() ) {
 		return new Promise( ( resolve, reject ) => {
 			printError( chalk.yellow( 'You do not have a GitHub token configured.' ) );
 			printError( chalk.yellow( 'Please Generate one at https://github.com/settings/tokens' ) );
@@ -106,11 +106,49 @@ function printError( err ) {
 	console.error( err );
 }
 
+function checkForErrors( result ) {
+	return new Promise( ( resolve, reject ) => {
+		if ( result.message ) {
+			printError( chalk.red( 'An error occurred while trying to get your notifications:' ) );
+			return reject( result.message );
+		}
+		resolve( result );
+	} );
+}
+
+function fetchAndPrintNotifications() {
+	fetchNotifications()
+		.then( convertToJson )
+		.then( checkForErrors )
+		.then( fetchNotificationSubjectUrls )
+		.then( printNotifications )
+		.catch( printError );
+}
+
+function saveToken( token ) {
+	config.set( 'token', token );
+}
+
+function getToken() {
+	return process.env.GITNEWS_TOKEN || config.get( 'token' );
+}
+
 // -------------
 
-fetchNotifications()
-	.then( convertToJson )
-	.then( fetchNotificationSubjectUrls )
-	.then( printNotifications )
-	.catch( printError );
+const cli = meow( `
+	Usage:
+		$ gitnews
 
+	Options:
+		--save-token  Prompt for the token and save it.
+` );
+
+if ( cli.flags.saveToken ) {
+	output( chalk.yellow( 'Please Generate a token at https://github.com/settings/tokens' ) );
+	inquirer.prompt( { type: 'password', name: 'token', message: 'Enter the GitHub token:' } )
+	// TODO: verify the token before saving
+		.then( input => saveToken( input.token ) )
+		.then( () => output( chalk.green( 'The token was saved! Now you can run gitnews to get your notifications.' ) ) );
+} else {
+	fetchAndPrintNotifications();
+}
