@@ -7,10 +7,15 @@ const date = require( 'date-fns' );
 const meow = require( 'meow' );
 const inquirer = require( 'inquirer' );
 const Conf = require( 'conf' );
-const debugFactory = require( 'debug' );
+const logUpdate = require( 'log-update' );
 
-const debug = debugFactory( 'gitnews' );
 const config = new Conf();
+
+let logMessages = false;
+
+function log( message ) {
+	logMessages && logUpdate( message );
+}
 
 function getUrl( notification ) {
 	return get( notification, 'htmlUrl', '' );
@@ -38,7 +43,6 @@ function getTitle( notification ) {
 }
 
 function getFormattedNotification( note ) {
-	debug( `formatting notification for ${ JSON.stringify( note.id ) }...` );
 	return [
 		chalk.bold.yellow( getDate( note ) + ': ' ),
 		chalk.green( '(' + getRepo( note ) + ') ' ),
@@ -60,7 +64,11 @@ function getFormattedNotifications( notifications ) {
 }
 
 function printNotifications( notifications ) {
-	debug( 'printing notifications...' );
+	log( `😁  printing ${ notifications.length } notifications...` );
+	logUpdate.done();
+	if ( notifications.length < 1 ) {
+		log( '👍  No notifications!' );
+	}
 	getFormattedNotifications( notifications ).map( output );
 }
 
@@ -82,13 +90,13 @@ function fetchNotifications() {
 			reject( 'GITNEWS_TOKEN was not set' );
 		} );
 	}
-	debug( 'fetching notifications...' );
+	log( 'fetching notifications...' );
 	return fetch( 'https://api.github.com/notifications', getFetchInit() );
 }
 
 function fetchNotificationSubjectUrl( notification ) {
 	const url = getUrlApiUrl( notification );
-	debug( `fetching notification url for ${ url }...` );
+	log( `fetching notification url for ${ url }...` );
 	return fetch( url, getFetchInit() )
 		.then( convertToJson )
 		.then( subject => {
@@ -98,7 +106,7 @@ function fetchNotificationSubjectUrl( notification ) {
 }
 
 function fetchNotificationSubjectUrls( notifications ) {
-	debug( `fetching notification urls for ${ notifications.length } notifications...` );
+	log( `fetching notification urls for ${ notifications.length } notifications...` );
 	return Promise.all( notifications.map( fetchNotificationSubjectUrl ) );
 }
 
@@ -141,7 +149,12 @@ const cli = meow( `
 
 	Options:
 		--save-token  Prompt for the token and save it.
+		--verbose     Say what we're doing.
 ` );
+
+if ( cli.flags.verbose ) {
+	logMessages = true;
+}
 
 if ( cli.flags.saveToken ) {
 	output( chalk.yellow( 'Please Generate a token at https://github.com/settings/tokens' ) );
