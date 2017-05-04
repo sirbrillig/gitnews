@@ -8,6 +8,7 @@ const meow = require( 'meow' );
 const inquirer = require( 'inquirer' );
 const Conf = require( 'conf' );
 const logUpdate = require( 'log-update' );
+const columnify = require( 'columnify' );
 
 const config = new Conf();
 
@@ -43,16 +44,25 @@ function getTitle( notification ) {
 }
 
 function getFormattedNotification( note ) {
-	return [
-		chalk.bold.yellow( getDate( note ) + ': ' ),
-		chalk.green( '(' + getRepo( note ) + ') ' ),
-		getTitle( note ),
-		' -- ' + getUrl( note ),
-	].join( '' );
+	return {
+		date: chalk.bold.yellow( getDate( note ) + ': ' ),
+		repo: chalk.green( '(' + getRepo( note ) + ') ' ),
+		title: getTitle( note ),
+		urlSeparator: ' -- ',
+		url: chalk.green( getUrl( note ) ),
+	};
 }
 
 function output( line ) {
 	console.log( line );
+}
+
+function outputColumns( data ) {
+	const options = {
+		columns: [ 'date', 'repo', 'title', 'urlSeparator', 'url' ],
+		showHeaders: false,
+	};
+	output( columnify( data, options ) );
 }
 
 function convertToJson( result ) {
@@ -69,7 +79,7 @@ function printNotifications( notifications ) {
 	if ( notifications.length < 1 ) {
 		log( '👍  No notifications!' );
 	}
-	getFormattedNotifications( notifications ).map( output );
+	outputColumns( getFormattedNotifications( notifications ) );
 }
 
 function getFetchInit() {
