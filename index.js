@@ -40,7 +40,7 @@ function fetchNotificationSubjectUrl( token, notification ) {
 	return fetch( url, getFetchInit( token ) )
 		.then( convertToJson )
 		.then( subject => {
-			notification.htmlUrl = get( subject, 'html_url' );
+			notification.html_url = get( subject, 'html_url' ); // eslint-disable-line camelcase
 			return notification;
 		} );
 }
