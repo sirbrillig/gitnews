@@ -22,6 +22,9 @@ function showNotification( note ) {
 
 The function will return a Promise. When the Promise resolves, it will pass the callback an array of notification objects. Each notification object has several properties, of which the most relevant are those listed below:
 
+- `updated_at`: The time (in ISO 8601 format) of the notification.
+- `unread`: True if the notification has not been seen.
+- `repository.name`: The Repository name (eg: `gitnews`).
 - `repository.full_name`: The full Repository name (eg: `sirbrillig/gitnews`).
 - `subject.title`: The title of the notification.
 - `html_url`: The URL of the notification.
