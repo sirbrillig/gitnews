@@ -1,6 +1,6 @@
 {
   "name": "gitnews",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Fetch GitHub notifications",
   "main": "index.js",
   "scripts": {
