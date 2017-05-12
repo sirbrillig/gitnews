@@ -26,3 +26,18 @@ node-fetch@^1.6.3:
   dependencies:
     encoding "^0.1.11"
     is-stream "^1.0.1"
+
+object-assign@^4.1.1:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
+
+qs@^6.4.0:
+  version "6.4.0"
+  resolved "https://registry.yarnpkg.com/qs/-/qs-6.4.0.tgz#13e26d28ad6b0ffaa91312cd3bf708ed351e7233"
+
+with-query@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/with-query/-/with-query-1.0.2.tgz#8c068c556142aca762d1642e2141a52548479c4a"
+  dependencies:
+    object-assign "^4.1.1"
+    qs "^6.4.0"

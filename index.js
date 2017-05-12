@@ -1,5 +1,6 @@
 const fetch = require( 'node-fetch' );
 const get = require( 'lodash.get' );
+const withQuery = require( 'with-query' );
 
 let logFunction = () => null;
 
@@ -24,14 +25,14 @@ function getFetchInit( token ) {
 	};
 }
 
-function fetchNotifications( token ) {
+function fetchNotifications( token, params = {} ) {
 	if ( ! token ) {
 		return new Promise( ( resolve, reject ) => {
 			reject( 'GitHub token is not available' );
 		} );
 	}
 	log( 'fetching notifications...' );
-	return fetch( 'https://api.github.com/notifications', getFetchInit( token ) );
+	return fetch( withQuery( 'https://api.github.com/notifications', params ), getFetchInit( token ) );
 }
 
 function fetchNotificationSubjectUrl( token, notification ) {
@@ -61,11 +62,18 @@ function checkForErrors( result ) {
 
 // -------------
 
-function getNotifications( token ) {
-	return fetchNotifications( token )
+function getNotifications( token, params = {} ) {
+	return fetchNotifications( token, params )
 		.then( convertToJson )
 		.then( checkForErrors )
-	// TODO: curry the fetch methods
+		.then( notifications => fetchNotificationSubjectUrls( token, notifications ) );
+}
+
+function getReadNotifications( token, params = {} ) {
+	return fetchNotifications( token, Object.assign( params, { all: true } ) )
+		.then( convertToJson )
+		.then( checkForErrors )
+		.then( notifications => notifications.filter( note => ! note.unread ) )
 		.then( notifications => fetchNotificationSubjectUrls( token, notifications ) );
 }
 
@@ -76,4 +84,5 @@ function setLogger( logger ) {
 module.exports = {
 	setLogger,
 	getNotifications,
+	getReadNotifications,
 };

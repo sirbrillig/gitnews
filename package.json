@@ -10,7 +10,8 @@
   "license": "MIT",
   "dependencies": {
     "lodash.get": "^4.4.2",
-    "node-fetch": "^1.6.3"
+    "node-fetch": "^1.6.3",
+    "with-query": "^1.0.2"
   },
   "devDependencies": {},
   "repository": {
