@@ -4,6 +4,8 @@ A simple node module to fetch GitHub notifications.
 
 Made to be used by [gitnews-cli](https://github.com/sirbrillig/gitnews-cli) and [gitnews-menubar](https://github.com/sirbrillig/gitnews-menubar).
 
+Since this module uses a custom token, it can report on private repositories as well as public ones.
+
 # Install
 
 Using npm:
@@ -20,7 +22,7 @@ yarn add gitnews
 
 # Usage
 
-You must first create GitHub token. To create the token, visit the [Tokens](https://github.com/settings/tokens) page and generate a new token for the app. You can call it "gitnews" and it needs at least `notifications` scope and the `repo` scope.
+You must first create a GitHub token so the module has access to your notifications. To create the token, visit the [Tokens](https://github.com/settings/tokens) page and generate a new token for the app. You can call it "gitnews" and it needs at least `notifications` scope and the `repo` scope.
 
 Then import the `getNotifications` named function and pass it the token. (There is also a `getReadNotifications` function to return already-read notifications.)
 
