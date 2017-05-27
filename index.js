@@ -1,88 +1,41 @@
-const fetch = require( 'node-fetch' );
-const get = require( 'lodash.get' );
-const withQuery = require( 'with-query' );
+const md5Hex = require( 'md5-hex' );
+const { setLogger } = require( './lib/logger' );
+const { fetchNotifications, getAdditionalDataFetcher } = require( './lib/fetchers' );
 
-let logFunction = () => null;
-
-function log( message ) {
-	logFunction( message );
-}
-
-function getUrlApiUrl( notification ) {
-	return get( notification, 'subject.url', '' );
-}
-
-function convertToJson( result ) {
-	return result.json();
-}
-
-function getFetchInit( token ) {
-	return {
-		method: 'GET',
-		headers: {
-			Authorization: 'token ' + token,
-		},
-	};
-}
-
-function fetchNotifications( token, params = {} ) {
-	if ( ! token ) {
-		return new Promise( ( resolve, reject ) => {
-			reject( 'GitHub token is not available' );
-		} );
-	}
-	log( 'fetching notifications...' );
-	return fetch( withQuery( 'https://api.github.com/notifications', params ), getFetchInit( token ) );
-}
-
-function fetchNotificationSubjectUrl( token, notification ) {
-	const url = getUrlApiUrl( notification );
-	log( `fetching notification url for ${ url }...` );
-	return fetch( url, getFetchInit( token ) )
-		.then( convertToJson )
-		.then( subject => {
-			notification.html_url = get( subject, 'html_url' ); // eslint-disable-line camelcase
-			return notification;
-		} );
-}
-
-function fetchNotificationSubjectUrls( token, notifications ) {
-	log( `fetching notification urls for ${ notifications.length } notifications...` );
-	return Promise.all( notifications.map( notification => fetchNotificationSubjectUrl( token, notification ) ) );
-}
-
-function checkForErrors( result ) {
-	return new Promise( ( resolve, reject ) => {
-		if ( result.message ) {
-			return reject( result.message );
-		}
-		resolve( result );
+function convertToGitnews( notifications ) {
+	return notifications.map( apiData => {
+		return {
+			api: {
+				notification: apiData,
+				subject: null, // will be filled-in later
+				comment: null, // will be filled-in later
+			},
+			id: md5Hex( apiData.id + apiData.updated_at ),
+			unread: apiData.unread,
+			title: apiData.subject.title,
+			type: apiData.subject.type,
+			updatedAt: apiData.updated_at,
+			'private': apiData.private,
+			repositoryName: apiData.repository.name,
+			repositoryFullName: apiData.repository.full_name,
+			repositoryOwnerAvatar: apiData.repository.owner.avatar_url,
+			subjectUrl: null, // will be filled-in later
+			commentUrl: null, // will be filled-in later
+			commentAvatar: null, // will be filled-in later
+		};
 	} );
 }
 
 // -------------
 
 function getNotifications( token, params = {} ) {
-	return fetchNotifications( token, params )
-		.then( convertToJson )
-		.then( checkForErrors )
-		.then( notifications => fetchNotificationSubjectUrls( token, notifications ) );
-}
-
-function getReadNotifications( token, params = {} ) {
-	return fetchNotifications( token, Object.assign( params, { all: true } ) )
-		.then( convertToJson )
-		.then( checkForErrors )
-		.then( notifications => notifications.filter( note => ! note.unread ) )
-		.then( notifications => fetchNotificationSubjectUrls( token, notifications ) );
-}
-
-function setLogger( logger ) {
-	logFunction = logger;
+	const fetchAdditionalData = getAdditionalDataFetcher( token );
+	return fetchNotifications( token, Object.assign( { all: true }, params ) )
+		.then( convertToGitnews )
+		.then( fetchAdditionalData );
 }
 
 module.exports = {
 	setLogger,
 	getNotifications,
-	getReadNotifications,
 };

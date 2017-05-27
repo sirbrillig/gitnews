@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "lodash.get": "^4.4.2",
+    "md5-hex": "^2.0.0",
     "node-fetch": "^1.6.3",
     "with-query": "^1.0.2"
   },
