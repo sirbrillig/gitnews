@@ -33,7 +33,7 @@ getNotifications( token )
 	.then( notes => notes.map( showNotification ) );
 
 function showNotification( note ) {
-	console.log( note.repository.full_name + ': ' + note.subject.title + ' -- ' + note.html_url );
+	console.log( note.repositoryFullName + ': ' + note.title + ' -- ' + note.subjectUrl );
 }
 ```
 
