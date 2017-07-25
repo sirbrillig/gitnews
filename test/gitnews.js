@@ -2,15 +2,18 @@
 const { expect } = require( 'chai' );
 const { getNotifications, setFetchFunction } = require( '../index' );
 
-function getMockFetch( responseJson, statusData = {} ) {
+function getResponseObject( responseJson, statusData = {} ) {
 	const status = statusData.status || 200;
-	const mockResponse = {
+	return {
 		ok: status > 199 && status < 300,
 		status,
 		statusText: statusData.statusText || 'OK',
 		json: () => Promise.resolve( responseJson ),
 	};
-	return () => Promise.resolve( mockResponse );
+}
+
+function getMockFetch( responseJson, statusData = {} ) {
+	return () => Promise.resolve( getResponseObject( responseJson, statusData ) );
 }
 
 function isError( e ) {
@@ -81,6 +84,24 @@ describe( 'gitnews', function() {
 
 		it( 'rejects with the status code if the server returns an http error', function() {
 			setFetchFunction( getMockFetch( [ {} ], { status: 418 } ) );
+			return getNotifications( '123abc' )
+				.catch( isError )
+				.then( err => {
+					expect( err.status ).to.equal( 418 );
+				} );
+		} );
+
+		it( 'rejects if the notifications were fetched but fetching the subject failed', function() {
+			const mockFetch = ( url ) => {
+				if ( !! url.match( /notifications/ ) ) {
+					return Promise.resolve( getResponseObject( [ { id: 1, subject: { url: 'subjectUrl' } } ] ) );
+				}
+				if ( !! url.match( 'subjectUrl' ) ) {
+					return Promise.resolve( getResponseObject( null, { status: 418 } ) );
+				}
+				return Promise.resolve( getResponseObject( null, { status: 500 } ) );
+			};
+			setFetchFunction( mockFetch );
 			return getNotifications( '123abc' )
 				.catch( isError )
 				.then( err => {
