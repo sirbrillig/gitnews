@@ -4,7 +4,7 @@
   "description": "Fetch GitHub notifications",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "author": "Payton Swick <payton@foolord.com>",
   "license": "MIT",
