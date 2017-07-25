@@ -1,5 +1,6 @@
 const md5Hex = require( 'md5-hex' );
 const { setLogger } = require( './lib/logger' );
+const { setFetchFunction } = require( './lib/fetch' );
 const { fetchNotifications, getAdditionalDataFetcher } = require( './lib/fetchers' );
 
 function convertToGitnews( notifications ) {
@@ -37,5 +38,6 @@ function getNotifications( token, params = {} ) {
 
 module.exports = {
 	setLogger,
+	setFetchFunction,
 	getNotifications,
 };
