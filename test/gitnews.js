@@ -22,6 +22,30 @@ function isError( e ) {
 
 describe( 'gitnews', function() {
 	describe( 'getNotifications()', function() {
+		it( 'rejects if no token was provided', function() {
+			setFetchFunction( getMockFetch( [ {} ], { status: 200 } ) );
+			return getNotifications()
+				.then( () => {
+					return Promise.reject( 'Missing token did not reject Promise.' );
+				} )
+				.catch( isError )
+				.then( err => {
+					expect( err ).to.be.ok;
+				} );
+		} );
+
+		it( 'rejects if no token was provided with code GitHubTokenNotFound', function() {
+			setFetchFunction( getMockFetch( [ {} ], { status: 200 } ) );
+			return getNotifications()
+				.then( () => {
+					return Promise.reject( 'Missing token did not reject Promise.' );
+				} )
+				.catch( isError )
+				.then( err => {
+					expect( err.code ).to.equal( 'GitHubTokenNotFound' );
+				} );
+		} );
+
 		it( 'rejects if the server returns an http error', function() {
 			setFetchFunction( getMockFetch( [ {} ], { status: 400 } ) );
 			return getNotifications( '123abc' )
