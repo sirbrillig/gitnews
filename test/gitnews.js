@@ -113,16 +113,13 @@ describe( 'gitnews', function() {
 		} );
 
 		it( 'rejects if the notifications were fetched but fetching the subject failed', function() {
-			const mockFetch = ( url ) => {
-				if ( !! url.match( /notifications/ ) ) {
-					return Promise.resolve( getResponseObject( [ { id: 1, subject: { url: 'subjectUrl' } } ] ) );
-				}
-				if ( !! url.match( 'subjectUrl' ) ) {
-					return Promise.resolve( getResponseObject( null, { status: 418 } ) );
-				}
-				return Promise.resolve( getResponseObject( null, { status: 500 } ) );
-			};
-			setFetchFunction( mockFetch );
+			setFetchFunction( getMockFetchForPatterns( {
+				notifications: {
+					json: [ { id: 1, subject: { url: 'subjectUrl', latest_comment_url: 'commentUrl' } } ], // eslint-disable-line camelcase
+				},
+				subjectUrl: { status: 418 },
+				'.': { status: 500 }
+			} ) );
 			return getNotifications( '123abc' )
 				.catch( isError )
 				.then( err => {
@@ -131,16 +128,13 @@ describe( 'gitnews', function() {
 		} );
 
 		it( 'rejects if the notifications were fetched but fetching the comment failed', function() {
-			const mockFetch = ( url ) => {
-				if ( !! url.match( /notifications|subjectUrl/ ) ) {
-					return Promise.resolve( getResponseObject( [ { id: 1, subject: { url: 'subjectUrl', latest_comment_url: 'commentUrl' } } ] ) ); // eslint-disable-line camelcase
-				}
-				if ( !! url.match( 'commentUrl' ) ) {
-					return Promise.resolve( getResponseObject( null, { status: 418 } ) );
-				}
-				return Promise.resolve( getResponseObject( null, { status: 500 } ) );
-			};
-			setFetchFunction( mockFetch );
+			setFetchFunction( getMockFetchForPatterns( {
+				'notifications|subjectUrl': {
+					json: [ { id: 1, subject: { url: 'subjectUrl', latest_comment_url: 'commentUrl' } } ], // eslint-disable-line camelcase
+				},
+				commentUrl: { status: 418 },
+				'.': { status: 500 }
+			} ) );
 			return getNotifications( '123abc' )
 				.catch( isError )
 				.then( err => {
