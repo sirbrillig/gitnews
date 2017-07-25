@@ -153,5 +153,16 @@ describe( 'gitnews', function() {
 					expect( results[ 0 ].id ).to.not.equal( results[ 1 ].id );
 				} );
 		} );
+
+		it( 'resolves with notifications that each include raw api responses', function() {
+			setFetchFunction( getMockFetch( [
+				{ id: 5, foo: 'bar' },
+				{ id: 6 },
+			] ) );
+			return getNotifications( '123abc' )
+				.then( results => {
+					expect( results[ 0 ].api.notification.foo ).to.equal( 'bar' );
+				} );
+		} );
 	} );
 } );
