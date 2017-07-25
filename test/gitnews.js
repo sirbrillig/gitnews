@@ -109,6 +109,24 @@ describe( 'gitnews', function() {
 				} );
 		} );
 
+		it( 'rejects if the notifications were fetched but fetching the comment failed', function() {
+			const mockFetch = ( url ) => {
+				if ( !! url.match( /notifications|subjectUrl/ ) ) {
+					return Promise.resolve( getResponseObject( [ { id: 1, subject: { url: 'subjectUrl', latest_comment_url: 'commentUrl' } } ] ) ); // eslint-disable-line camelcase
+				}
+				if ( !! url.match( 'commentUrl' ) ) {
+					return Promise.resolve( getResponseObject( null, { status: 418 } ) );
+				}
+				return Promise.resolve( getResponseObject( null, { status: 500 } ) );
+			};
+			setFetchFunction( mockFetch );
+			return getNotifications( '123abc' )
+				.catch( isError )
+				.then( err => {
+					expect( err.status ).to.equal( 418 );
+				} );
+		} );
+
 		it( 'resolves with an array of notifications', function() {
 			setFetchFunction( getMockFetch( [ {}, {} ] ) );
 			return getNotifications( '123abc' )
