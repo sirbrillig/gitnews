@@ -12,8 +12,29 @@ function getResponseObject( responseJson, statusData = {} ) {
 	};
 }
 
+function getMockResponseObject( responseData ) {
+	const json = responseData.json || null;
+	const status = responseData.status || 200;
+	return {
+		ok: status > 199 && status < 300,
+		status,
+		statusText: responseData.statusText || 'OK',
+		json: () => Promise.resolve( json ),
+	};
+}
+
 function getMockFetch( responseJson, statusData = {} ) {
 	return () => Promise.resolve( getResponseObject( responseJson, statusData ) );
+}
+
+function getMockFetchForPatterns( patterns ) {
+	return ( url ) => {
+		const matchedPattern = Object.keys( patterns ).find( pattern => url.match( pattern ) );
+		if ( matchedPattern ) {
+			return Promise.resolve( getMockResponseObject( patterns[ matchedPattern ] ) );
+		}
+		return Promise.resolve( getMockResponseObject( { status: 500 } ) );
+	};
 }
 
 function isError( e ) {
@@ -155,13 +176,31 @@ describe( 'gitnews', function() {
 		} );
 
 		it( 'resolves with notifications that each include raw api responses', function() {
-			setFetchFunction( getMockFetch( [
-				{ id: 5, foo: 'bar' },
-				{ id: 6 },
-			] ) );
+			setFetchFunction( getMockFetchForPatterns( {
+				notification: { json: [
+					{ id: 5, foo: 'bar', subject: { url: 'subjectUrl' } },
+					{ id: 6, subject: { url: 'subjectUrl' } },
+				] },
+				subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
+			} ) );
 			return getNotifications( '123abc' )
 				.then( results => {
 					expect( results[ 0 ].api.notification.foo ).to.equal( 'bar' );
+					expect( results[ 1 ].api.subject.html_url ).to.equal( 'htmlUrl' );
+					expect( results[ 1 ].api.comment.html_url ).to.equal( 'htmlUrl' );
+				} );
+		} );
+
+		it( 'resolves with notifications that each include subjectUrl', function() {
+			setFetchFunction( getMockFetchForPatterns( {
+				notification: { json: [
+					{ id: 5, subject: { url: 'subjectUrl' } },
+				] },
+				subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
+			} ) );
+			return getNotifications( '123abc' )
+				.then( results => {
+					expect( results[ 0 ].subjectUrl ).to.equal( 'htmlUrl' );
 				} );
 		} );
 	} );
