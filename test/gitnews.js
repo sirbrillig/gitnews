@@ -37,12 +37,33 @@ describe( 'gitnews', function() {
 		it( 'rejects if no token was provided with code GitHubTokenNotFound', function() {
 			setFetchFunction( getMockFetch( [ {} ], { status: 200 } ) );
 			return getNotifications()
-				.then( () => {
-					return Promise.reject( 'Missing token did not reject Promise.' );
-				} )
 				.catch( isError )
 				.then( err => {
 					expect( err.code ).to.equal( 'GitHubTokenNotFound' );
+				} );
+		} );
+
+		it( 'rejects if the server returns an error message', function() {
+			setFetchFunction( getMockFetch( { message: 'something failed' } ) );
+			return getNotifications( '123abc' )
+				.then( () => {
+					return Promise.reject( 'Failure message did not reject Promise.' );
+				} )
+				.catch( isError )
+				.then( err => {
+					expect( err.message ).to.equal( 'something failed' );
+				} );
+		} );
+
+		it( 'rejects if the server returns a non-array', function() {
+			setFetchFunction( getMockFetch( { foo: 'bar' } ) );
+			return getNotifications( '123abc' )
+				.then( () => {
+					return Promise.reject( 'Non-array did not reject Promise.' );
+				} )
+				.catch( isError )
+				.then( err => {
+					expect( err.message ).to.equal( 'Notifications list is not an array.' );
 				} );
 		} );
 
