@@ -4,18 +4,22 @@ const { setLogger } = require( './lib/logger' );
 const { setFetchFunction } = require( './lib/fetch' );
 const { fetchNotifications, getAdditionalDataFetcher } = require( './lib/fetchers' );
 
+// Used to make sure invalid api responses still have a unique ID
+let uniqueIndex = 0;
+
 function convertToGitnews( notifications ) {
 	return notifications.map( apiData => {
 		if ( ! apiData ) {
 			apiData = {};
 		}
+		uniqueIndex += 1;
 		return {
 			api: {
 				notification: apiData,
 				subject: null, // will be filled-in later
 				comment: null, // will be filled-in later
 			},
-			id: md5Hex( get( apiData, 'id', 0 ) + get( apiData, 'updated_at', '1' ) ),
+			id: md5Hex( get( apiData, 'id', uniqueIndex ) + get( apiData, 'updated_at', '1' ) ),
 			unread: apiData.unread,
 			title: get( apiData, 'subject.title' ),
 			type: get( apiData, 'subject.type' ),
