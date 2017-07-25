@@ -13,13 +13,33 @@ function getMockFetch( responseJson, statusData = {} ) {
 	return () => Promise.resolve( mockResponse );
 }
 
+function isError( e ) {
+	if ( typeof e === 'string' ) {
+		return Promise.reject( new Error( e ) );
+	}
+	return Promise.resolve( e );
+}
+
 describe( 'gitnews', function() {
 	describe( 'getNotifications()', function() {
-		it( 'rejects if the server returns an http error', function( done ) {
+		it( 'rejects if the server returns an http error', function() {
 			setFetchFunction( getMockFetch( [ {} ], { status: 400 } ) );
-			getNotifications( '123abc' )
-				.catch( () => {
-					done();
+			return getNotifications( '123abc' )
+				.then( () => {
+					return Promise.reject( 'Failed http did not reject Promise.' );
+				} )
+				.catch( isError )
+				.then( err => {
+					expect( err ).to.be.ok;
+				} );
+		} );
+
+		it( 'rejects with the status code if the server returns an http error', function() {
+			setFetchFunction( getMockFetch( [ {} ], { status: 418 } ) );
+			return getNotifications( '123abc' )
+				.catch( isError )
+				.then( err => {
+					expect( err.status ).to.equal( 418 );
 				} );
 		} );
 
