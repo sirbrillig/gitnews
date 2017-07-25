@@ -14,7 +14,10 @@
     "node-fetch": "^1.6.3",
     "with-query": "^1.0.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "chai": "^4.1.0",
+    "mocha": "^3.4.2"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sirbrillig/gitnews.git"
