@@ -197,5 +197,60 @@ describe( 'gitnews', function() {
 					expect( results[ 0 ].subjectUrl ).to.equal( 'htmlUrl' );
 				} );
 		} );
+
+		it( 'resolves with notifications that each include commentUrl set to subjectUrl if no commentUrl exists', function() {
+			setFetchFunction( getMockFetchForPatterns( {
+				notification: { json: [
+					{ id: 5, subject: { url: 'subjectUrl' } },
+				] },
+				subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
+			} ) );
+			return getNotifications( '123abc' )
+				.then( results => {
+					expect( results[ 0 ].commentUrl ).to.equal( 'htmlUrl' );
+				} );
+		} );
+
+		it( 'resolves with notifications that each include commentUrl set to commentUrl if commentUrl exists', function() {
+			setFetchFunction( getMockFetchForPatterns( {
+				notification: { json: [
+					{ id: 5, subject: { url: 'subjectUrl', latest_comment_url: 'commentUrl' } }, // eslint-disable-line camelcase
+				] },
+				subjectUrl: { json: { html_url: 'htmlSubjectUrl' } }, // eslint-disable-line camelcase
+				commentUrl: { json: { html_url: 'htmlCommentUrl' } }, // eslint-disable-line camelcase
+			} ) );
+			return getNotifications( '123abc' )
+				.then( results => {
+					expect( results[ 0 ].commentUrl ).to.equal( 'htmlCommentUrl' );
+				} );
+		} );
+
+		it( 'resolves with notifications that each include commentAvatar set to last comment avatar_url if it exists', function() {
+			setFetchFunction( getMockFetchForPatterns( {
+				notification: { json: [
+					{ id: 5, subject: { url: 'subjectUrl', latest_comment_url: 'commentUrl' } }, // eslint-disable-line camelcase
+				] },
+				subjectUrl: { json: { html_url: 'htmlSubjectUrl' } }, // eslint-disable-line camelcase
+				commentUrl: { json: { html_url: 'htmlCommentUrl', user: { avatar_url: 'avatarUrl' } } }, // eslint-disable-line camelcase
+			} ) );
+			return getNotifications( '123abc' )
+				.then( results => {
+					expect( results[ 0 ].commentAvatar ).to.equal( 'avatarUrl' );
+				} );
+		} );
+
+		it( 'resolves with notifications that each include commentAvatar set to subject avatar_url if no comment exists', function() {
+			setFetchFunction( getMockFetchForPatterns( {
+				notification: { json: [
+					{ id: 5, subject: { url: 'subjectUrl' } }, // eslint-disable-line camelcase
+				] },
+				subjectUrl: { json: { html_url: 'htmlSubjectUrl', user: { avatar_url: 'subjectAvatarUrl' } } }, // eslint-disable-line camelcase
+				commentUrl: { json: { html_url: 'htmlCommentUrl', user: { avatar_url: 'commentAvatarUrl' } } }, // eslint-disable-line camelcase
+			} ) );
+			return getNotifications( '123abc' )
+				.then( results => {
+					expect( results[ 0 ].commentAvatar ).to.equal( 'subjectAvatarUrl' );
+				} );
+		} );
 	} );
 } );
