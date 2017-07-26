@@ -142,115 +142,119 @@ describe( 'gitnews', function() {
 				} );
 		} );
 
-		it( 'resolves with an array of notifications', function() {
-			setFetchFunction( getMockFetch( [ {}, {} ] ) );
-			return getNotifications( '123abc' )
-				.then( results => {
-					expect( results ).to.have.length( 2 );
-				} );
-		} );
+		describe( 'when it resolves', function() {
+			it( 'is an array', function() {
+				setFetchFunction( getMockFetch( [ {}, {} ] ) );
+				return getNotifications( '123abc' )
+					.then( results => {
+						expect( results ).to.have.length( 2 );
+					} );
+			} );
 
-		it( 'resolves with notifications that each have a unique id with invalid data', function() {
-			setFetchFunction( getMockFetch( [ {}, {} ] ) );
-			return getNotifications( '123abc' )
-				.then( results => {
-					expect( results[ 0 ].id ).to.not.equal( results[ 1 ].id );
+			describe( 'each notification', function() {
+				it( 'has a unique id even when data is invalid', function() {
+					setFetchFunction( getMockFetch( [ {}, {} ] ) );
+					return getNotifications( '123abc' )
+						.then( results => {
+							expect( results[ 0 ].id ).to.not.equal( results[ 1 ].id );
+						} );
 				} );
-		} );
 
-		it( 'resolves with notifications that each have a unique id with valid data', function() {
-			setFetchFunction( getMockFetch( [
-				{ id: 5, updated_at: '123454' }, // eslint-disable-line camelcase
-				{ id: 6, updated_at: '123456' }, // eslint-disable-line camelcase
-			] ) );
-			return getNotifications( '123abc' )
-				.then( results => {
-					expect( results[ 0 ].id ).to.not.equal( results[ 1 ].id );
+				it( 'has a unique id when data is valid', function() {
+					setFetchFunction( getMockFetch( [
+						{ id: 5, updated_at: '123454' }, // eslint-disable-line camelcase
+						{ id: 6, updated_at: '123456' }, // eslint-disable-line camelcase
+					] ) );
+					return getNotifications( '123abc' )
+						.then( results => {
+							expect( results[ 0 ].id ).to.not.equal( results[ 1 ].id );
+						} );
 				} );
-		} );
 
-		it( 'resolves with notifications that each include raw api responses', function() {
-			setFetchFunction( getMockFetchForPatterns( {
-				notification: { json: [
-					{ id: 5, foo: 'bar', subject: { url: 'subjectUrl' } },
-					{ id: 6, subject: { url: 'subjectUrl' } },
-				] },
-				subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
-			} ) );
-			return getNotifications( '123abc' )
-				.then( results => {
-					expect( results[ 0 ].api.notification.foo ).to.equal( 'bar' );
-					expect( results[ 1 ].api.subject.html_url ).to.equal( 'htmlUrl' );
-					expect( results[ 1 ].api.comment.html_url ).to.equal( 'htmlUrl' );
+				it( 'includes the raw api responses', function() {
+					setFetchFunction( getMockFetchForPatterns( {
+						notification: { json: [
+							{ id: 5, foo: 'bar', subject: { url: 'subjectUrl' } },
+							{ id: 6, subject: { url: 'subjectUrl' } },
+						] },
+						subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
+					} ) );
+					return getNotifications( '123abc' )
+						.then( results => {
+							expect( results[ 0 ].api.notification.foo ).to.equal( 'bar' );
+							expect( results[ 1 ].api.subject.html_url ).to.equal( 'htmlUrl' );
+							expect( results[ 1 ].api.comment.html_url ).to.equal( 'htmlUrl' );
+						} );
 				} );
-		} );
 
-		it( 'resolves with notifications that each include subjectUrl', function() {
-			setFetchFunction( getMockFetchForPatterns( {
-				notification: { json: [
-					{ id: 5, subject: { url: 'subjectUrl' } },
-				] },
-				subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
-			} ) );
-			return getNotifications( '123abc' )
-				.then( results => {
-					expect( results[ 0 ].subjectUrl ).to.equal( 'htmlUrl' );
+				it( 'includes subjectUrl', function() {
+					setFetchFunction( getMockFetchForPatterns( {
+						notification: { json: [
+							{ id: 5, subject: { url: 'subjectUrl' } },
+						] },
+						subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
+					} ) );
+					return getNotifications( '123abc' )
+						.then( results => {
+							expect( results[ 0 ].subjectUrl ).to.equal( 'htmlUrl' );
+						} );
 				} );
-		} );
 
-		it( 'resolves with notifications that each include commentUrl set to subjectUrl if no commentUrl exists', function() {
-			setFetchFunction( getMockFetchForPatterns( {
-				notification: { json: [
-					{ id: 5, subject: { url: 'subjectUrl' } },
-				] },
-				subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
-			} ) );
-			return getNotifications( '123abc' )
-				.then( results => {
-					expect( results[ 0 ].commentUrl ).to.equal( 'htmlUrl' );
+				it( 'includes commentUrl set to subjectUrl if no comment exists', function() {
+					setFetchFunction( getMockFetchForPatterns( {
+						notification: { json: [
+							{ id: 5, subject: { url: 'subjectUrl' } },
+						] },
+						subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
+					} ) );
+					return getNotifications( '123abc' )
+						.then( results => {
+							expect( results[ 0 ].commentUrl ).to.equal( 'htmlUrl' );
+						} );
 				} );
-		} );
 
-		it( 'resolves with notifications that each include commentUrl set to commentUrl if commentUrl exists', function() {
-			setFetchFunction( getMockFetchForPatterns( {
-				notification: { json: [
-					{ id: 5, subject: { url: 'subjectUrl', latest_comment_url: 'commentUrl' } }, // eslint-disable-line camelcase
-				] },
-				subjectUrl: { json: { html_url: 'htmlSubjectUrl' } }, // eslint-disable-line camelcase
-				commentUrl: { json: { html_url: 'htmlCommentUrl' } }, // eslint-disable-line camelcase
-			} ) );
-			return getNotifications( '123abc' )
-				.then( results => {
-					expect( results[ 0 ].commentUrl ).to.equal( 'htmlCommentUrl' );
+				it( 'includes commentUrl set to commentUrl if a comment exists', function() {
+					setFetchFunction( getMockFetchForPatterns( {
+						notification: { json: [
+							{ id: 5, subject: { url: 'subjectUrl', latest_comment_url: 'commentUrl' } }, // eslint-disable-line camelcase
+						] },
+						subjectUrl: { json: { html_url: 'htmlSubjectUrl' } }, // eslint-disable-line camelcase
+						commentUrl: { json: { html_url: 'htmlCommentUrl' } }, // eslint-disable-line camelcase
+					} ) );
+					return getNotifications( '123abc' )
+						.then( results => {
+							expect( results[ 0 ].commentUrl ).to.equal( 'htmlCommentUrl' );
+						} );
 				} );
-		} );
 
-		it( 'resolves with notifications that each include commentAvatar set to last comment avatar_url if it exists', function() {
-			setFetchFunction( getMockFetchForPatterns( {
-				notification: { json: [
-					{ id: 5, subject: { url: 'subjectUrl', latest_comment_url: 'commentUrl' } }, // eslint-disable-line camelcase
-				] },
-				subjectUrl: { json: { html_url: 'htmlSubjectUrl' } }, // eslint-disable-line camelcase
-				commentUrl: { json: { html_url: 'htmlCommentUrl', user: { avatar_url: 'avatarUrl' } } }, // eslint-disable-line camelcase
-			} ) );
-			return getNotifications( '123abc' )
-				.then( results => {
-					expect( results[ 0 ].commentAvatar ).to.equal( 'avatarUrl' );
+				it( 'includes commentAvatar set to last comment avatar_url if a comment exists', function() {
+					setFetchFunction( getMockFetchForPatterns( {
+						notification: { json: [
+							{ id: 5, subject: { url: 'subjectUrl', latest_comment_url: 'commentUrl' } }, // eslint-disable-line camelcase
+						] },
+						subjectUrl: { json: { html_url: 'htmlSubjectUrl' } }, // eslint-disable-line camelcase
+						commentUrl: { json: { html_url: 'htmlCommentUrl', user: { avatar_url: 'avatarUrl' } } }, // eslint-disable-line camelcase
+					} ) );
+					return getNotifications( '123abc' )
+						.then( results => {
+							expect( results[ 0 ].commentAvatar ).to.equal( 'avatarUrl' );
+						} );
 				} );
-		} );
 
-		it( 'resolves with notifications that each include commentAvatar set to subject avatar_url if no comment exists', function() {
-			setFetchFunction( getMockFetchForPatterns( {
-				notification: { json: [
-					{ id: 5, subject: { url: 'subjectUrl' } }, // eslint-disable-line camelcase
-				] },
-				subjectUrl: { json: { html_url: 'htmlSubjectUrl', user: { avatar_url: 'subjectAvatarUrl' } } }, // eslint-disable-line camelcase
-				commentUrl: { json: { html_url: 'htmlCommentUrl', user: { avatar_url: 'commentAvatarUrl' } } }, // eslint-disable-line camelcase
-			} ) );
-			return getNotifications( '123abc' )
-				.then( results => {
-					expect( results[ 0 ].commentAvatar ).to.equal( 'subjectAvatarUrl' );
+				it( 'includes commentAvatar set to subject avatar_url if no comment exists', function() {
+					setFetchFunction( getMockFetchForPatterns( {
+						notification: { json: [
+							{ id: 5, subject: { url: 'subjectUrl' } }, // eslint-disable-line camelcase
+						] },
+						subjectUrl: { json: { html_url: 'htmlSubjectUrl', user: { avatar_url: 'subjectAvatarUrl' } } }, // eslint-disable-line camelcase
+						commentUrl: { json: { html_url: 'htmlCommentUrl', user: { avatar_url: 'commentAvatarUrl' } } }, // eslint-disable-line camelcase
+					} ) );
+					return getNotifications( '123abc' )
+						.then( results => {
+							expect( results[ 0 ].commentAvatar ).to.equal( 'subjectAvatarUrl' );
+						} );
 				} );
+			} );
 		} );
 	} );
 } );
