@@ -1,6 +1,10 @@
 /* global describe, it */
-const { expect } = require( 'chai' );
+const chai = require( 'chai' );
+const chaiSubset = require( 'chai-subset' );
 const { getNotifications, setFetchFunction } = require( '../index' );
+
+chai.use( chaiSubset );
+const { expect } = chai;
 
 function getResponseObject( responseJson, statusData = {} ) {
 	const status = statusData.status || 200;
@@ -252,6 +256,36 @@ describe( 'gitnews', function() {
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].commentAvatar ).to.equal( 'subjectAvatarUrl' );
+						} );
+				} );
+
+				it( 'includes fields copied from notification request', function() {
+					setFetchFunction( getMockFetchForPatterns( {
+						notification: { json: [
+							{
+								id: 5,
+								subject: { url: 'subjectUrl', latest_comment_url: 'commentUrl', title: 'myTitle', type: 'myType' }, // eslint-disable-line camelcase
+								unread: true,
+								updated_at: '123456', // eslint-disable-line camelcase
+								'private': true,
+								repository: { name: 'myRepo', full_name: 'myFullRepo', owner: { avatar_url: 'ownerAvatarUrl' } }, // eslint-disable-line camelcase
+							},
+						] },
+						subjectUrl: { json: { html_url: 'htmlSubjectUrl' } }, // eslint-disable-line camelcase
+						commentUrl: { json: { html_url: 'htmlCommentUrl' } }, // eslint-disable-line camelcase
+					} ) );
+					return getNotifications( '123abc' )
+						.then( results => {
+							expect( results[ 0 ] ).to.containSubset( {
+								unread: true,
+								title: 'myTitle',
+								type: 'myType',
+								updatedAt: '123456',
+								'private': true,
+								repositoryName: 'myRepo',
+								repositoryFullName: 'myFullRepo',
+								repositoryOwnerAvatar: 'ownerAvatarUrl',
+							} );
 						} );
 				} );
 			} );
