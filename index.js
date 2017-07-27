@@ -5,14 +5,14 @@ const { setFetchFunction } = require( './lib/fetch' );
 const { fetchNotifications, getAdditionalDataFetcher } = require( './lib/fetchers' );
 
 // Used to make sure invalid api responses still have a unique ID
-let uniqueIndex = 0;
+let uniqueIndex = Date.now();
 
 function convertToGitnews( notifications ) {
 	return notifications.map( apiData => {
 		if ( ! apiData ) {
 			apiData = {};
 		}
-		uniqueIndex += 1;
+		uniqueIndex += Date.now();
 		return {
 			api: {
 				notification: apiData,
