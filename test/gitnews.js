@@ -2,51 +2,14 @@
 const chai = require( 'chai' );
 const chaiSubset = require( 'chai-subset' );
 const { getNotifications, setFetchFunction } = require( '../index' );
+const {
+	isError,
+	getMockFetchForPatterns,
+	getMockFetch,
+} = require( './helpers.js' );
 
 chai.use( chaiSubset );
 const { expect } = chai;
-
-function getResponseObject( responseJson, statusData = {} ) {
-	const status = statusData.status || 200;
-	return {
-		ok: status > 199 && status < 300,
-		status,
-		statusText: statusData.statusText || 'OK',
-		json: () => Promise.resolve( responseJson ),
-	};
-}
-
-function getMockResponseObject( responseData ) {
-	const json = responseData.json || null;
-	const status = responseData.status || 200;
-	return {
-		ok: status > 199 && status < 300,
-		status,
-		statusText: responseData.statusText || 'OK',
-		json: () => Promise.resolve( json ),
-	};
-}
-
-function getMockFetch( responseJson, statusData = {} ) {
-	return () => Promise.resolve( getResponseObject( responseJson, statusData ) );
-}
-
-function getMockFetchForPatterns( patterns ) {
-	return ( url ) => {
-		const matchedPattern = Object.keys( patterns ).find( pattern => url.match( pattern ) );
-		if ( matchedPattern ) {
-			return Promise.resolve( getMockResponseObject( patterns[ matchedPattern ] ) );
-		}
-		return Promise.resolve( getMockResponseObject( { status: 500 } ) );
-	};
-}
-
-function isError( e ) {
-	if ( typeof e === 'string' ) {
-		return Promise.reject( new Error( e ) );
-	}
-	return Promise.resolve( e );
-}
 
 describe( 'gitnews', function() {
 	describe( 'getNotifications()', function() {
