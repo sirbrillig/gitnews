@@ -13,6 +13,16 @@ const { expect } = chai;
 
 describe( 'gitnews', function() {
 	describe( 'getNotifications()', function() {
+		it( 'requests the GitHub notifications API', function() {
+			return new Promise( ( resolve ) => {
+				setFetchFunction( resolve );
+				getNotifications( '123abc' );
+			} )
+				.then( ( url ) => {
+					expect( url ).to.equal( 'https://api.github.com/notifications?all=true' );
+				} );
+		} );
+
 		it( 'rejects if no token was provided', function() {
 			setFetchFunction( getMockFetch( [ {} ], { status: 200 } ) );
 			return getNotifications()
