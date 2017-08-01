@@ -1,7 +1,6 @@
 const nodeFetch = require( 'node-fetch' );
 const md5Hex = require( 'md5-hex' );
 const get = require( 'lodash.get' );
-const { setLogger } = require( './lib/logger' );
 const { fetchNotifications, getAdditionalDataFetcher } = require( './lib/fetchers' );
 
 // Used to make sure invalid api responses still have a unique ID
@@ -40,6 +39,7 @@ function convertToGitnews( notifications ) {
 function makeNotificationGetter( options = {} ) {
 	const defaultOptions = {
 		fetch: nodeFetch,
+		log: () => {},
 	};
 	const getterOptions = Object.assign( {}, defaultOptions, options );
 	return function getNotifications( token, params = {} ) {
@@ -51,6 +51,5 @@ function makeNotificationGetter( options = {} ) {
 }
 
 module.exports = {
-	setLogger,
 	makeNotificationGetter,
 };
