@@ -19,4 +19,5 @@ function makeNotificationGetter( options = {} ) {
 
 module.exports = {
 	makeNotificationGetter,
+	getNotifications: makeNotificationGetter(),
 };
