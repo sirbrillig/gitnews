@@ -37,23 +37,17 @@ function convertToGitnews( notifications ) {
 
 // -------------
 
-class NotificationGetter {
-	constructor( options = {} ) {
-		this.fetchFunction = options.fetch || nodeFetch;
-		this.getNotifications = this.getNotifications.bind( this );
-	}
-
-	getNotifications( token, params = {} ) {
-		const fetchAdditionalData = getAdditionalDataFetcher( { fetch: this.fetchFunction }, token );
-		return fetchNotifications( { fetch: this.fetchFunction }, token, Object.assign( { all: true }, params ) )
+function makeNotificationGetter( options = {} ) {
+	const defaultOptions = {
+		fetch: nodeFetch,
+	};
+	const getterOptions = Object.assign( {}, defaultOptions, options );
+	return function getNotifications( token, params = {} ) {
+		const fetchAdditionalData = getAdditionalDataFetcher( getterOptions, token );
+		return fetchNotifications( getterOptions, token, Object.assign( { all: true }, params ) )
 			.then( convertToGitnews )
 			.then( fetchAdditionalData );
-	}
-}
-
-function makeNotificationGetter( options = {} ) {
-	const getter = new NotificationGetter( options );
-	return getter.getNotifications;
+	};
 }
 
 module.exports = {
