@@ -44,8 +44,14 @@ function getNotifications( token, params = {} ) {
 		.then( fetchAdditionalData );
 }
 
+function makeNotificationGetter( options = {} ) {
+	options.fetch && setFetchFunction( options.fetch );
+	return getNotifications;
+}
+
 module.exports = {
 	setLogger,
 	setFetchFunction,
 	getNotifications,
+	makeNotificationGetter,
 };
