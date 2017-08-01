@@ -6,7 +6,7 @@ Made to be used by [gitnews-cli](https://github.com/sirbrillig/gitnews-cli) and 
 
 Since this module uses a custom token, it can report on private repositories as well as public ones.
 
-# Install
+## Install
 
 Using npm:
 
@@ -20,7 +20,7 @@ Using yarn:
 yarn add gitnews
 ```
 
-# Usage
+## Usage
 
 You must first create a GitHub token so the module has access to your notifications. To create the token, visit the [Tokens](https://github.com/settings/tokens) page and generate a new token for the app. You can call it "gitnews" and it needs at least `notifications` scope and the `repo` scope.
 
@@ -53,3 +53,18 @@ The function will return a Promise. When the Promise resolves, it will pass the 
 - `repositoryOwnerAvatar`: The URL of the image for the Repository's owner.
 
 If you need additional data, the actual GitHub API responses are stored under the `api` property.
+
+## Advanced Usage
+
+The `getNotifications` function is actually created by a factory function called `makeNotificationGetter` which is also exported by the module. `makeNotificationGetter` accepts an object with the following optional properties:
+
+- `log`: Defines a logging function which will be called with status messages as the fetching process proceeds. This defaults to a noop.
+- `fetch`: Defines the `fetch` function to use when making API requests. This defaults to [`node-fetch`](https://www.npmjs.com/package/node-fetch). This is mostly useful for testing.
+
+For example:
+
+```js
+const { makeNotificationGetter } = require( 'gitnews' );
+const getNotifications = makeNotificationGetter( { log: message => console.log( message ) } );
+getNotifications( token );
+```
