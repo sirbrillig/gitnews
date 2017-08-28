@@ -2,7 +2,7 @@ const nodeFetch = require( 'node-fetch' );
 const { fetchNotifications, getAdditionalDataFetcher } = require( './lib/fetchers' );
 const { makeConverter } = require( './lib/converter' );
 
-function makeNotificationGetter( options = {} ) {
+function createNoteGetter( options = {} ) {
 	const defaultOptions = {
 		fetch: nodeFetch,
 		log: () => {},
@@ -18,6 +18,6 @@ function makeNotificationGetter( options = {} ) {
 }
 
 module.exports = {
-	makeNotificationGetter,
-	getNotifications: makeNotificationGetter(),
+	createNoteGetter,
+	getNotifications: createNoteGetter(),
 };

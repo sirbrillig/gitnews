@@ -56,7 +56,7 @@ If you need additional data, the actual GitHub API responses are stored under th
 
 ## Advanced Usage
 
-The `getNotifications` function is actually created by a factory function called `makeNotificationGetter` which is also exported by the module. `makeNotificationGetter` accepts an object with the following optional properties:
+The `getNotifications` function is actually created by a factory function called `createNoteGetter` which is also exported by the module. `createNoteGetter` accepts an object with the following optional properties:
 
 - `log`: Defines a logging function which will be called with status messages as the fetching process proceeds. This defaults to a noop.
 - `fetch`: Defines the `fetch` function to use when making API requests. This defaults to [`node-fetch`](https://www.npmjs.com/package/node-fetch). This is mostly useful for testing.
@@ -64,7 +64,7 @@ The `getNotifications` function is actually created by a factory function called
 For example:
 
 ```js
-const { makeNotificationGetter } = require( 'gitnews' );
-const getNotifications = makeNotificationGetter( { log: message => console.log( message ) } );
+const { createNoteGetter } = require( 'gitnews' );
+const getNotifications = createNoteGetter( { log: message => console.log( message ) } );
 getNotifications( token );
 ```

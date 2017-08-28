@@ -1,7 +1,7 @@
 /* global describe, it */
 const chai = require( 'chai' );
 const chaiSubset = require( 'chai-subset' );
-const { makeNotificationGetter } = require( '../index' );
+const { createNoteGetter } = require( '../index' );
 const {
 	isError,
 	getMockFetchForPatterns,
@@ -15,7 +15,7 @@ describe( 'gitnews', function() {
 	describe( 'getNotifications()', function() {
 		it( 'requests the GitHub notifications API', function() {
 			return new Promise( ( resolve ) => {
-				const getNotifications = makeNotificationGetter( { fetch: resolve } );
+				const getNotifications = createNoteGetter( { fetch: resolve } );
 				getNotifications( '123abc' );
 			} )
 				.then( ( url ) => {
@@ -25,7 +25,7 @@ describe( 'gitnews', function() {
 
 		it( 'rejects if no token was provided', function() {
 			const fetch = getMockFetch( [ {} ], { status: 200 } );
-			const getNotifications = makeNotificationGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch } );
 			return getNotifications()
 				.then( () => {
 					return Promise.reject( 'Missing token did not reject Promise.' );
@@ -38,7 +38,7 @@ describe( 'gitnews', function() {
 
 		it( 'rejects if no token was provided with code GitHubTokenNotFound', function() {
 			const fetch = getMockFetch( [ {} ], { status: 200 } );
-			const getNotifications = makeNotificationGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch } );
 			return getNotifications()
 				.catch( isError )
 				.then( err => {
@@ -48,7 +48,7 @@ describe( 'gitnews', function() {
 
 		it( 'rejects if the server returns an error message', function() {
 			const fetch = getMockFetch( { message: 'something failed' } );
-			const getNotifications = makeNotificationGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch } );
 			return getNotifications( '123abc' )
 				.then( () => {
 					return Promise.reject( 'Failure message did not reject Promise.' );
@@ -61,7 +61,7 @@ describe( 'gitnews', function() {
 
 		it( 'rejects if the server returns a non-array', function() {
 			const fetch = getMockFetch( { foo: 'bar' } );
-			const getNotifications = makeNotificationGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch } );
 			return getNotifications( '123abc' )
 				.then( () => {
 					return Promise.reject( 'Non-array did not reject Promise.' );
@@ -74,7 +74,7 @@ describe( 'gitnews', function() {
 
 		it( 'rejects if the server returns an http error', function() {
 			const fetch = getMockFetch( [ {} ], { status: 400 } );
-			const getNotifications = makeNotificationGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch } );
 			return getNotifications( '123abc' )
 				.then( () => {
 					return Promise.reject( 'Failed http did not reject Promise.' );
@@ -87,7 +87,7 @@ describe( 'gitnews', function() {
 
 		it( 'rejects with the status code if the server returns an http error', function() {
 			const fetch = getMockFetch( [ {} ], { status: 418 } );
-			const getNotifications = makeNotificationGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch } );
 			return getNotifications( '123abc' )
 				.catch( isError )
 				.then( err => {
@@ -103,7 +103,7 @@ describe( 'gitnews', function() {
 				subjectUrl: { status: 418 },
 				'.': { status: 500 }
 			} );
-			const getNotifications = makeNotificationGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch } );
 			return getNotifications( '123abc' )
 				.catch( isError )
 				.then( err => {
@@ -119,7 +119,7 @@ describe( 'gitnews', function() {
 				commentUrl: { status: 418 },
 				'.': { status: 500 }
 			} );
-			const getNotifications = makeNotificationGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch } );
 			return getNotifications( '123abc' )
 				.catch( isError )
 				.then( err => {
@@ -130,7 +130,7 @@ describe( 'gitnews', function() {
 		describe( 'when it resolves', function() {
 			it( 'is an array', function() {
 				const fetch = getMockFetch( [ {}, {} ] );
-				const getNotifications = makeNotificationGetter( { fetch } );
+				const getNotifications = createNoteGetter( { fetch } );
 				return getNotifications( '123abc' )
 					.then( results => {
 						expect( results ).to.have.length( 2 );
@@ -140,7 +140,7 @@ describe( 'gitnews', function() {
 			describe( 'each notification', function() {
 				it( 'has a unique id even when data is invalid', function() {
 					const fetch = getMockFetch( [ {}, {} ] );
-					const getNotifications = makeNotificationGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].id ).to.not.equal( results[ 1 ].id );
@@ -152,7 +152,7 @@ describe( 'gitnews', function() {
 						{ id: 5, updated_at: '123454' }, // eslint-disable-line camelcase
 						{ id: 6, updated_at: '123456' }, // eslint-disable-line camelcase
 					] );
-					const getNotifications = makeNotificationGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].id ).to.not.equal( results[ 1 ].id );
@@ -167,7 +167,7 @@ describe( 'gitnews', function() {
 						] },
 						subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
 					} );
-					const getNotifications = makeNotificationGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].api.notification.foo ).to.equal( 'bar' );
@@ -183,7 +183,7 @@ describe( 'gitnews', function() {
 						] },
 						subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
 					} );
-					const getNotifications = makeNotificationGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].subjectUrl ).to.equal( 'htmlUrl' );
@@ -197,7 +197,7 @@ describe( 'gitnews', function() {
 						] },
 						subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
 					} );
-					const getNotifications = makeNotificationGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].commentUrl ).to.equal( 'htmlUrl' );
@@ -212,7 +212,7 @@ describe( 'gitnews', function() {
 						subjectUrl: { json: { html_url: 'htmlSubjectUrl' } }, // eslint-disable-line camelcase
 						commentUrl: { json: { html_url: 'htmlCommentUrl' } }, // eslint-disable-line camelcase
 					} );
-					const getNotifications = makeNotificationGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].commentUrl ).to.equal( 'htmlCommentUrl' );
@@ -227,7 +227,7 @@ describe( 'gitnews', function() {
 						subjectUrl: { json: { html_url: 'htmlSubjectUrl' } }, // eslint-disable-line camelcase
 						commentUrl: { json: { html_url: 'htmlCommentUrl', user: { avatar_url: 'avatarUrl' } } }, // eslint-disable-line camelcase
 					} );
-					const getNotifications = makeNotificationGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].commentAvatar ).to.equal( 'avatarUrl' );
@@ -242,7 +242,7 @@ describe( 'gitnews', function() {
 						subjectUrl: { json: { html_url: 'htmlSubjectUrl', user: { avatar_url: 'subjectAvatarUrl' } } }, // eslint-disable-line camelcase
 						commentUrl: { json: { html_url: 'htmlCommentUrl', user: { avatar_url: 'commentAvatarUrl' } } }, // eslint-disable-line camelcase
 					} );
-					const getNotifications = makeNotificationGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].commentAvatar ).to.equal( 'subjectAvatarUrl' );
@@ -264,7 +264,7 @@ describe( 'gitnews', function() {
 						subjectUrl: { json: { html_url: 'htmlSubjectUrl' } }, // eslint-disable-line camelcase
 						commentUrl: { json: { html_url: 'htmlCommentUrl' } }, // eslint-disable-line camelcase
 					} );
-					const getNotifications = makeNotificationGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ] ).to.containSubset( {
