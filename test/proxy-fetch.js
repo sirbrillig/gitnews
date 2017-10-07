@@ -4,6 +4,7 @@ const chaiSubset = require( 'chai-subset' );
 const sinon = require( 'sinon' );
 const sinonChai = require( 'sinon-chai' );
 const getProxyFetch = require( '../lib/proxy-fetch' );
+const { Response } = require( 'node-fetch' );
 
 chai.use( chaiSubset );
 chai.use( sinonChai );
@@ -11,7 +12,7 @@ const { expect } = chai;
 
 describe( 'proxyFetch()', function() {
 	it( 'calls the fetch function if there is no cached response for that url', function() {
-		const mockFetch = sinon.stub().returns( Promise.resolve( {} ) );
+		const mockFetch = sinon.stub().returns( Promise.resolve( new Response() ) );
 		const proxyFetch = getProxyFetch( { fetch: mockFetch } );
 		return proxyFetch( 'url', {} )
 		.then( () => {
@@ -20,7 +21,7 @@ describe( 'proxyFetch()', function() {
 	} );
 
 	it( 'does not call the fetch function if there is a cached response for that url', function() {
-		const mockFetch = sinon.stub().returns( Promise.resolve( { data: 'mock data' } ) );
+		const mockFetch = sinon.stub().returns( Promise.resolve( new Response( 'hello' ) ) );
 		const proxyFetch = getProxyFetch( { fetch: mockFetch } );
 		return proxyFetch( 'url', {} )
 		.then( () => proxyFetch( 'url', {} ) )
@@ -31,7 +32,7 @@ describe( 'proxyFetch()', function() {
 	} );
 
 	it( 'calls the fetch function if there is a cached response for a different url', function() {
-		const mockFetch = sinon.stub().returns( Promise.resolve( { data: 'mock data' } ) );
+		const mockFetch = sinon.stub().returns( Promise.resolve( new Response( 'hello' ) ) );
 		const proxyFetch = getProxyFetch( { fetch: mockFetch } );
 		return proxyFetch( 'url-1', {} )
 		.then( () => proxyFetch( 'url-2', {} ) )
