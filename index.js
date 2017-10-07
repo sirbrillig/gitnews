@@ -1,12 +1,11 @@
-const getProxyFetch = require( './lib/proxy-fetch' );
+const nodeFetch = require( 'node-fetch' );
 const { fetchNotifications, getAdditionalDataFetcher } = require( './lib/fetchers' );
 const { makeConverter } = require( './lib/converter' );
-const noop = () => {};
 
 function createNoteGetter( options = {} ) {
 	const defaultOptions = {
-		fetch: getProxyFetch(),
-		log: noop,
+		fetch: nodeFetch,
+		log: () => {},
 	};
 	const getterOptions = Object.assign( {}, defaultOptions, options );
 	const convertToGitnews = makeConverter();
