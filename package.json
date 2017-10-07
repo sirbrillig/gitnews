@@ -9,7 +9,6 @@
   "author": "Payton Swick <payton@foolord.com>",
   "license": "MIT",
   "dependencies": {
-    "debug": "^3.0.1",
     "lodash.get": "^4.4.2",
     "md5-hex": "^2.0.0",
     "node-fetch": "^1.6.3",
@@ -18,9 +17,7 @@
   "devDependencies": {
     "chai": "^4.1.0",
     "chai-subset": "^1.5.0",
-    "mocha": "^3.4.2",
-    "sinon": "^3.2.1",
-    "sinon-chai": "^2.13.0"
+    "mocha": "^3.4.2"
   },
   "repository": {
     "type": "git",
