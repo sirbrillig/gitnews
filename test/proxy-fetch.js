@@ -20,8 +20,17 @@ describe( 'proxyFetch()', function() {
 		} );
 	} );
 
+	it( 'returns fetched Response correctly if there is no cached response for that url', function() {
+		const mockFetch = sinon.stub().returns( Promise.resolve( new Response( '{"foo":"bar"}' ) ) );
+		const proxyFetch = getProxyFetch( { fetch: mockFetch } );
+		return proxyFetch( 'url', {} )
+		.then( response => response.ok ? response : Promise.reject( response ) )
+		.then( response => response.json() )
+		.then( response => expect( response ).to.eql( { foo: 'bar' } ) );
+	} );
+
 	it( 'does not call the fetch function if there is a cached response for that url', function() {
-		const mockFetch = sinon.stub().returns( Promise.resolve( new Response( 'hello' ) ) );
+		const mockFetch = sinon.stub().returns( Promise.resolve( new Response( '{"foo":"bar"}' ) ) );
 		const proxyFetch = getProxyFetch( { fetch: mockFetch } );
 		return proxyFetch( 'url', {} )
 		.then( () => proxyFetch( 'url', {} ) )
@@ -32,7 +41,7 @@ describe( 'proxyFetch()', function() {
 	} );
 
 	it( 'calls the fetch function if there is a cached response for a different url', function() {
-		const mockFetch = sinon.stub().returns( Promise.resolve( new Response( 'hello' ) ) );
+		const mockFetch = sinon.stub().returns( Promise.resolve( new Response( '{"foo":"bar"}' ) ) );
 		const proxyFetch = getProxyFetch( { fetch: mockFetch } );
 		return proxyFetch( 'url-1', {} )
 		.then( () => proxyFetch( 'url-2', {} ) )
