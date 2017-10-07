@@ -12,7 +12,7 @@
     "debug": "^3.0.1",
     "lodash.get": "^4.4.2",
     "md5-hex": "^2.0.0",
-    "node-fetch": "^1.6.3",
+    "node-fetch": "1.7.3",
     "with-query": "^1.0.2"
   },
   "devDependencies": {
