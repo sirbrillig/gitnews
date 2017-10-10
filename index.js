@@ -11,6 +11,7 @@ function createNoteGetter( options = {} ) {
 		cacheResponseFor: cacheHandler.cacheResponseFor,
 		fetch: nodeFetch,
 		log: noop,
+		notificationsUrl: 'https://api.github.com/notifications',
 	};
 	const getterOptions = Object.assign( {}, defaultOptions, options );
 	const convertToGitnews = makeConverter();
