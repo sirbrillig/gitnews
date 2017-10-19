@@ -1,5 +1,7 @@
 # gitnews
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/sirbrillig/gitnews.svg)](https://greenkeeper.io/)
+
 A simple node module to fetch GitHub notifications.
 
 Made to be used by [gitnews-cli](https://github.com/sirbrillig/gitnews-cli) and [gitnews-menubar](https://github.com/sirbrillig/gitnews-menubar).
