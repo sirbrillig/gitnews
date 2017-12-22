@@ -240,7 +240,21 @@ describe( 'gitnews', function() {
 							{ id: 5, subject: { url: 'subjectUrl' } }, // eslint-disable-line camelcase
 						] },
 						subjectUrl: { json: { html_url: 'htmlSubjectUrl', user: { avatar_url: 'subjectAvatarUrl' } } }, // eslint-disable-line camelcase
-						commentUrl: { json: { html_url: 'htmlCommentUrl', user: { avatar_url: 'commentAvatarUrl' } } }, // eslint-disable-line camelcase
+					} );
+					const getNotifications = createNoteGetter( { fetch } );
+					return getNotifications( '123abc' )
+						.then( results => {
+							expect( results[ 0 ].commentAvatar ).to.equal( 'subjectAvatarUrl' );
+						} );
+				} );
+
+				it( 'includes commentAvatar set to subject avatar_url if comment returns a 404', function() {
+					const fetch = getMockFetchForPatterns( {
+						notification: { json: [
+							{ id: 5, subject: { url: 'subjectUrl', latest_comment_url: 'commentUrl' } }, // eslint-disable-line camelcase
+						] },
+						subjectUrl: { json: { html_url: 'htmlSubjectUrl', user: { avatar_url: 'subjectAvatarUrl' } } }, // eslint-disable-line camelcase
+						commentUrl: { status: 404 },
 					} );
 					const getNotifications = createNoteGetter( { fetch } );
 					return getNotifications( '123abc' )
