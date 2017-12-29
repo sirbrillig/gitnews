@@ -1,6 +1,8 @@
 /* global describe, it */
 const chai = require( 'chai' );
 const chaiSubset = require( 'chai-subset' );
+const sinon = require( 'sinon' );
+const sinonChai = require( 'sinon-chai' );
 const { createNoteGetter } = require( '../index' );
 const {
 	isError,
@@ -9,13 +11,15 @@ const {
 } = require( './helpers.js' );
 
 chai.use( chaiSubset );
+chai.use( sinonChai );
 const { expect } = chai;
+const noop = () => {};
 
 describe( 'gitnews', function() {
 	describe( 'getNotifications()', function() {
 		it( 'requests the GitHub notifications API', function() {
 			return new Promise( ( resolve ) => {
-				const getNotifications = createNoteGetter( { fetch: resolve } );
+				const getNotifications = createNoteGetter( { fetch: resolve, getCachedResponseFor: noop } );
 				getNotifications( '123abc' );
 			} )
 				.then( ( url ) => {
@@ -25,7 +29,7 @@ describe( 'gitnews', function() {
 
 		it( 'rejects if no token was provided', function() {
 			const fetch = getMockFetch( [ {} ], { status: 200 } );
-			const getNotifications = createNoteGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 			return getNotifications()
 				.then( () => {
 					return Promise.reject( 'Missing token did not reject Promise.' );
@@ -38,7 +42,7 @@ describe( 'gitnews', function() {
 
 		it( 'rejects if no token was provided with code GitHubTokenNotFound', function() {
 			const fetch = getMockFetch( [ {} ], { status: 200 } );
-			const getNotifications = createNoteGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 			return getNotifications()
 				.catch( isError )
 				.then( err => {
@@ -48,7 +52,7 @@ describe( 'gitnews', function() {
 
 		it( 'rejects if the server returns an error message', function() {
 			const fetch = getMockFetch( { message: 'something failed' } );
-			const getNotifications = createNoteGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 			return getNotifications( '123abc' )
 				.then( () => {
 					return Promise.reject( 'Failure message did not reject Promise.' );
@@ -61,7 +65,7 @@ describe( 'gitnews', function() {
 
 		it( 'rejects if the server returns a non-array', function() {
 			const fetch = getMockFetch( { foo: 'bar' } );
-			const getNotifications = createNoteGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 			return getNotifications( '123abc' )
 				.then( () => {
 					return Promise.reject( 'Non-array did not reject Promise.' );
@@ -74,7 +78,7 @@ describe( 'gitnews', function() {
 
 		it( 'rejects if the server returns an http error', function() {
 			const fetch = getMockFetch( [ {} ], { status: 400 } );
-			const getNotifications = createNoteGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 			return getNotifications( '123abc' )
 				.then( () => {
 					return Promise.reject( 'Failed http did not reject Promise.' );
@@ -87,7 +91,7 @@ describe( 'gitnews', function() {
 
 		it( 'rejects with the status code if the server returns an http error', function() {
 			const fetch = getMockFetch( [ {} ], { status: 418 } );
-			const getNotifications = createNoteGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 			return getNotifications( '123abc' )
 				.catch( isError )
 				.then( err => {
@@ -103,7 +107,7 @@ describe( 'gitnews', function() {
 				subjectUrl: { status: 418 },
 				'.': { status: 500 }
 			} );
-			const getNotifications = createNoteGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 			return getNotifications( '123abc' )
 				.catch( isError )
 				.then( err => {
@@ -119,7 +123,7 @@ describe( 'gitnews', function() {
 				commentUrl: { status: 418 },
 				'.': { status: 500 }
 			} );
-			const getNotifications = createNoteGetter( { fetch } );
+			const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 			return getNotifications( '123abc' )
 				.catch( isError )
 				.then( err => {
@@ -130,17 +134,52 @@ describe( 'gitnews', function() {
 		describe( 'when it resolves', function() {
 			it( 'is an array', function() {
 				const fetch = getMockFetch( [ {}, {} ] );
-				const getNotifications = createNoteGetter( { fetch } );
+				const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 				return getNotifications( '123abc' )
 					.then( results => {
 						expect( results ).to.have.length( 2 );
 					} );
 			} );
 
+			it( 'calls the fetch function once for each url if caching is disabled', function() {
+				const fetch = sinon.stub().callsFake( getMockFetchForPatterns( {
+					notification: { json: [
+						{ id: 5, subject: { url: 'subjectUrl' } },
+						{ id: 6, subject: { url: 'subjectUrl' } },
+					] },
+					subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
+				} ) );
+				const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
+				return getNotifications( '123abc' )
+					.then( () => {
+						expect( fetch ).to.have.callCount( 5 );
+					} );
+			} );
+
+			it( 'does not call the fetch function for a url that has already been fetched if caching is enabled', function() {
+				const fetch = sinon.stub().callsFake( getMockFetchForPatterns( {
+					notification: { json: [
+						{ id: 5, subject: { url: 'subjectUrl' } },
+						{ id: 6, subject: { url: 'subjectUrl' } },
+					] },
+					subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
+				} ) );
+				const getNotifications = createNoteGetter( { fetch } );
+				return getNotifications( '123abc' )
+					.then( () => {
+						// TODO: the cache fails for the subject calls because the second
+						// call to fetch is triggered before the first call completes
+						// (Promise.all), so the cache misses on the second call. It succeeds
+						// for the comment fetches because they only happen after the subject
+						// fetches are all complete.
+						expect( fetch ).to.have.callCount( 3 );
+					} );
+			} );
+
 			describe( 'each notification', function() {
 				it( 'has a unique id even when data is invalid', function() {
 					const fetch = getMockFetch( [ {}, {} ] );
-					const getNotifications = createNoteGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].id ).to.not.equal( results[ 1 ].id );
@@ -152,7 +191,7 @@ describe( 'gitnews', function() {
 						{ id: 5, updated_at: '123454' }, // eslint-disable-line camelcase
 						{ id: 6, updated_at: '123456' }, // eslint-disable-line camelcase
 					] );
-					const getNotifications = createNoteGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].id ).to.not.equal( results[ 1 ].id );
@@ -167,7 +206,7 @@ describe( 'gitnews', function() {
 						] },
 						subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
 					} );
-					const getNotifications = createNoteGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].api.notification.foo ).to.equal( 'bar' );
@@ -183,7 +222,7 @@ describe( 'gitnews', function() {
 						] },
 						subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
 					} );
-					const getNotifications = createNoteGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].subjectUrl ).to.equal( 'htmlUrl' );
@@ -197,7 +236,7 @@ describe( 'gitnews', function() {
 						] },
 						subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
 					} );
-					const getNotifications = createNoteGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].commentUrl ).to.equal( 'htmlUrl' );
@@ -212,7 +251,7 @@ describe( 'gitnews', function() {
 						subjectUrl: { json: { html_url: 'htmlSubjectUrl' } }, // eslint-disable-line camelcase
 						commentUrl: { json: { html_url: 'htmlCommentUrl' } }, // eslint-disable-line camelcase
 					} );
-					const getNotifications = createNoteGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].commentUrl ).to.equal( 'htmlCommentUrl' );
@@ -227,7 +266,7 @@ describe( 'gitnews', function() {
 						subjectUrl: { json: { html_url: 'htmlSubjectUrl' } }, // eslint-disable-line camelcase
 						commentUrl: { json: { html_url: 'htmlCommentUrl', user: { avatar_url: 'avatarUrl' } } }, // eslint-disable-line camelcase
 					} );
-					const getNotifications = createNoteGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].commentAvatar ).to.equal( 'avatarUrl' );
@@ -256,7 +295,7 @@ describe( 'gitnews', function() {
 						subjectUrl: { json: { html_url: 'htmlSubjectUrl', user: { avatar_url: 'subjectAvatarUrl' } } }, // eslint-disable-line camelcase
 						commentUrl: { status: 404 },
 					} );
-					const getNotifications = createNoteGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ].commentAvatar ).to.equal( 'subjectAvatarUrl' );
@@ -278,7 +317,7 @@ describe( 'gitnews', function() {
 						subjectUrl: { json: { html_url: 'htmlSubjectUrl' } }, // eslint-disable-line camelcase
 						commentUrl: { json: { html_url: 'htmlCommentUrl' } }, // eslint-disable-line camelcase
 					} );
-					const getNotifications = createNoteGetter( { fetch } );
+					const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
 					return getNotifications( '123abc' )
 						.then( results => {
 							expect( results[ 0 ] ).to.containSubset( {

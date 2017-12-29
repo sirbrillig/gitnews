@@ -1,11 +1,17 @@
 const nodeFetch = require( 'node-fetch' );
+const getCacheHandler = require( './lib/cache-handler' );
 const { fetchNotifications, getAdditionalDataFetcher } = require( './lib/fetchers' );
 const { makeConverter } = require( './lib/converter' );
+const noop = () => {};
 
 function createNoteGetter( options = {} ) {
+	const cacheHandler = getCacheHandler();
 	const defaultOptions = {
+		getCachedResponseFor: cacheHandler.getCachedResponseFor,
+		cacheResponseFor: cacheHandler.cacheResponseFor,
 		fetch: nodeFetch,
-		log: () => {},
+		log: noop,
+		notificationsUrl: 'https://api.github.com/notifications',
 	};
 	const getterOptions = Object.assign( {}, defaultOptions, options );
 	const convertToGitnews = makeConverter();
