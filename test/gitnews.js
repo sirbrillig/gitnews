@@ -1,6 +1,8 @@
 /* global describe, it */
 const chai = require( 'chai' );
 const chaiSubset = require( 'chai-subset' );
+const sinon = require( 'sinon' );
+const sinonChai = require( 'sinon-chai' );
 const { createNoteGetter } = require( '../index' );
 const {
 	isError,
@@ -9,6 +11,7 @@ const {
 } = require( './helpers.js' );
 
 chai.use( chaiSubset );
+chai.use( sinonChai );
 const { expect } = chai;
 const noop = () => {};
 
@@ -135,6 +138,41 @@ describe( 'gitnews', function() {
 				return getNotifications( '123abc' )
 					.then( results => {
 						expect( results ).to.have.length( 2 );
+					} );
+			} );
+
+			it( 'calls the fetch function once for each url if caching is disabled', function() {
+				const fetch = sinon.stub().callsFake( getMockFetchForPatterns( {
+					notification: { json: [
+						{ id: 5, subject: { url: 'subjectUrl' } },
+						{ id: 6, subject: { url: 'subjectUrl' } },
+					] },
+					subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
+				} ) );
+				const getNotifications = createNoteGetter( { fetch, getCachedResponseFor: noop } );
+				return getNotifications( '123abc' )
+					.then( () => {
+						expect( fetch ).to.have.callCount( 5 );
+					} );
+			} );
+
+			it( 'does not call the fetch function for a url that has already been fetched if caching is enabled', function() {
+				const fetch = sinon.stub().callsFake( getMockFetchForPatterns( {
+					notification: { json: [
+						{ id: 5, subject: { url: 'subjectUrl' } },
+						{ id: 6, subject: { url: 'subjectUrl' } },
+					] },
+					subjectUrl: { json: { html_url: 'htmlUrl' } }, // eslint-disable-line camelcase
+				} ) );
+				const getNotifications = createNoteGetter( { fetch } );
+				return getNotifications( '123abc' )
+					.then( () => {
+						// TODO: the cache fails for the subject calls because the second
+						// call to fetch is triggered before the first call completes
+						// (Promise.all), so the cache misses on the second call. It succeeds
+						// for the comment fetches because they only happen after the subject
+						// fetches are all complete.
+						expect( fetch ).to.have.callCount( 3 );
 					} );
 			} );
 
