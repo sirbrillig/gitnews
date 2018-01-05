@@ -68,3 +68,29 @@ const { createNoteGetter } = require( 'gitnews' );
 const getNotifications = createNoteGetter( { log: message => console.log( message ) } );
 getNotifications( token );
 ```
+
+## Marking Notifications Read
+
+The main purpose of this module is to retreieve notification URLs. Once a notification URL is visited, it typically marks the notification as read. In some cases (eg: security warnings), that does not happen. In these cases, it might be useful to manually mark a notification as read. This module exports the `markNotificationRead` function which can be used to do this.
+
+The `markNotificationRead` function requires two arguments:
+
+- The token.
+- The notification object that resulted from calling getNotifications.
+
+The following example marks all notifications as read.
+
+```js
+const { getNotifications, markNotificationRead } = require( 'gitnews' );
+getNotifications( token )
+	.then( notes => notes.filter( note => note.unread ) )
+	.then( notes => notes.map( note => markNotificationRead( token, note ) ) );
+```
+
+Just like `getNotifications`, `markNotificationRead` is created by a factory function called `createNoteMarkRead`. This can be used to override the `log` and `fetch` functions.
+
+```js
+const { createNoteMarkRead } = require( 'gitnews' );
+const markNotificationRead = createNoteMarkRead( { log: message => console.log( message ) } );
+markNotificationRead( token, note );
+```
