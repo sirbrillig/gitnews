@@ -333,7 +333,7 @@ describe( 'gitnews', function() {
 			return getNotifications( '123abc' )
 				.then( results => markNotificationRead( '123abc', results[ 0 ] ) )
 				.then( result => {
-					expect( result.ok ).to.equal( 'cool' );
+					expect( result.ok ).to.be.ok;
 				} );
 		} );
 	} );
