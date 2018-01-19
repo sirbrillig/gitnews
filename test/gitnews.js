@@ -1,7 +1,7 @@
 /* global describe, it */
 const chai = require( 'chai' );
 const chaiSubset = require( 'chai-subset' );
-const { createNoteGetter } = require( '../index' );
+const { createNoteGetter, createNoteMarkRead } = require( '../index' );
 const {
 	isError,
 	getMockFetchForPatterns,
@@ -294,6 +294,47 @@ describe( 'gitnews', function() {
 						} );
 				} );
 			} );
+		} );
+	} );
+
+	describe( 'markNotificationRead()', function() {
+		it( 'rejects if no notification is provided', function() {
+			const fetch = getMockFetch( [ {} ], { status: 200 } );
+			const markNotificationRead = createNoteMarkRead( { fetch } );
+			markNotificationRead( '123abc' )
+				.then( () => {
+					return Promise.reject( 'Failure message did not reject Promise.' );
+				} )
+				.catch( isError )
+				.then( err => {
+					expect( err.message ).to.equal( 'Notification has no URL' );
+				} );
+		} );
+
+		it( 'marks a notification as read', function() {
+			const fetch = getMockFetchForPatterns( {
+				notification: { json: [
+					{
+						id: 5,
+						url: 'noteUrl',
+						subject: { url: 'subjectUrl', latest_comment_url: 'commentUrl', title: 'myTitle', type: 'myType' }, // eslint-disable-line camelcase
+						unread: true,
+						updated_at: '123456', // eslint-disable-line camelcase
+						'private': true,
+						repository: { name: 'myRepo', full_name: 'myFullRepo', owner: { avatar_url: 'ownerAvatarUrl' } }, // eslint-disable-line camelcase
+					},
+				] },
+				noteUrl: { method: 'PATCH', json: { ok: 'cool' } },
+				subjectUrl: { json: { html_url: 'htmlSubjectUrl' } }, // eslint-disable-line camelcase
+				commentUrl: { json: { html_url: 'htmlCommentUrl' } }, // eslint-disable-line camelcase
+			} );
+			const getNotifications = createNoteGetter( { fetch } );
+			const markNotificationRead = createNoteMarkRead( { fetch } );
+			return getNotifications( '123abc' )
+				.then( results => markNotificationRead( '123abc', results[ 0 ] ) )
+				.then( result => {
+					expect( result.ok ).to.be.ok;
+				} );
 		} );
 	} );
 } );

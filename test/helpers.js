@@ -14,12 +14,16 @@ function getMockFetch( responseJson, statusData = {} ) {
 }
 
 function getMockFetchForPatterns( patterns ) {
-	return ( url ) => {
-		const matchedPattern = Object.keys( patterns ).find( pattern => url.match( pattern ) );
-		if ( matchedPattern ) {
-			return Promise.resolve( getMockResponseObject( patterns[ matchedPattern ] ) );
+	return ( url, params ) => {
+		const matchedPatternKey = Object.keys( patterns ).find( pattern => url.match( pattern ) );
+		if ( ! matchedPatternKey ) {
+			return Promise.resolve( getMockResponseObject( { status: 500 } ) );
 		}
-		return Promise.resolve( getMockResponseObject( { status: 500 } ) );
+		const matchedPattern = patterns[ matchedPatternKey ];
+		if ( params.method && matchedPattern.method && matchedPattern.method !== params.method ) {
+			return Promise.resolve( getMockResponseObject( { status: 500 } ) );
+		}
+		return Promise.resolve( getMockResponseObject( matchedPattern ) );
 	};
 }
 
