@@ -1,5 +1,5 @@
-const nodeFetch = require( 'node-fetch' );
 const {
+	defaultFetch,
 	fetchNotifications,
 	getAdditionalDataFetcher,
 	sendMarkNotificationRead
@@ -8,7 +8,7 @@ const { makeConverter } = require( './lib/converter' );
 
 function createNoteGetter( options = {} ) {
 	const defaultOptions = {
-		fetch: nodeFetch,
+		fetch: defaultFetch,
 		log: () => {},
 	};
 	const mergedOptions = Object.assign( {}, defaultOptions, options );
@@ -23,7 +23,7 @@ function createNoteGetter( options = {} ) {
 
 function createNoteMarkRead( options = {} ) {
 	const defaultOptions = {
-		fetch: nodeFetch,
+		fetch: defaultFetch,
 		log: () => {},
 	};
 	const mergedOptions = Object.assign( {}, defaultOptions, options );
