@@ -11,7 +11,7 @@
   "dependencies": {
     "lodash.get": "^4.4.2",
     "md5-hex": "^2.0.0",
-    "node-fetch": "^2.2.0",
+    "request": "^2.88.0",
     "with-query": "^1.1.2"
   },
   "devDependencies": {
